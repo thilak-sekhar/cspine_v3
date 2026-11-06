@@ -1,0 +1,174 @@
+NOTEBOOK 3 - TESTING ON THE LOCKED TEST SET + FINAL REPORT
+Notebook-1 output: /kaggle/input/datasets/kthilaksekhar/cspine-v3-training-preprocessing-output/workspace_archive
+Notebook-2 output: /kaggle/input/datasets/kthilaksekhar/cspine-v3-training-preprocessing-output/workspace_archive
+CPU threads: 4
+Locked test images: 100 | dev images: 400 | experiments with all 5 fold-models: ['E0', 'E1', 'E2', 'E3', 'E4', 'E5', 'E6', 'E7']
+E0: test predictions done in 118s
+E1: test predictions done in 84s
+E2: test predictions done in 119s
+E3: test predictions done in 121s
+E4: test predictions done in 121s
+E5: test predictions done in 120s
+E6: test predictions done in 226s
+E7: test predictions done in 220s
+
+A) CROSS-VALIDATION, 400 dev images (each predicted by a model that never saw it)
+exp   acc  macro_f1   qwk  within1  auc_macro  auc_abn  auc_mod  auc_sev  balacc_abn  balacc_mod  balacc_sev
+ E0 0.432     0.426 0.453    0.858      0.648    0.706    0.722    0.651       0.652       0.696       0.622
+ E1 0.458     0.460 0.555    0.902      0.674    0.760    0.750    0.723       0.695       0.735       0.663
+ E2 0.440     0.447 0.551    0.902      0.694    0.776    0.773    0.779       0.674       0.729       0.690
+ E3 0.485     0.488 0.603    0.910      0.732    0.824    0.815    0.801       0.735       0.761       0.680
+ E4 0.500     0.506 0.616    0.897      0.737    0.828    0.799    0.813       0.739       0.763       0.734
+ E5 0.550     0.557 0.650    0.910      0.767    0.825    0.829    0.857       0.758       0.784       0.765
+ E6 0.515     0.527 0.665    0.930      0.757    0.830    0.830    0.851       0.737       0.776       0.757
+ E7 0.505     0.511 0.584    0.902      0.725    0.791    0.786    0.794       0.730       0.739       0.710
+
+B) LOCKED TEST, 100 images (5 fold-models averaged)
+exp  acc  macro_f1   qwk  within1  auc_macro  auc_abn  auc_mod  auc_sev  balacc_abn  balacc_mod  balacc_sev
+ E0 0.36     0.343 0.431     0.89      0.674    0.730    0.754    0.786       0.598       0.680       0.570
+ E1 0.42     0.420 0.566     0.93      0.692    0.774    0.768    0.802       0.670       0.720       0.626
+ E2 0.50     0.506 0.594     0.90      0.737    0.830    0.790    0.851       0.721       0.740       0.702
+ E3 0.52     0.531 0.649     0.91      0.756    0.851    0.835    0.859       0.764       0.759       0.765
+ E4 0.52     0.521 0.677     0.92      0.764    0.868    0.841    0.868       0.813       0.780       0.734
+ E5 0.58     0.580 0.659     0.91      0.779    0.904    0.837    0.836       0.826       0.790       0.740
+ E6 0.62     0.624 0.703     0.91      0.788    0.882    0.851    0.882       0.832       0.809       0.802
+ E7 0.49     0.515 0.629     0.92      0.731    0.812    0.810    0.898       0.758       0.708       0.763
+Reading guide: abn = CDI>=1 vs 0, mod = CDI>=2 vs <=1, sev = CDI 3 vs <=2 (AUC / balanced accuracy of those yes-no questions).
+
+BASELINE (base-paper replication) = E0 | PROPOSED = E6 (chosen among ['E4', 'E5', 'E6'] by cross-validation QWK, not by test)
+
+PAIRED BOOTSTRAP (B minus A). A step is a REAL gain only if the 95% interval excludes 0 (P(better) > 0.975).
+E1 vs E0 [CV-400]  acc: +0.025 [-0.030,+0.080] P=0.80  qwk: +0.103 [+0.012,+0.191] P=0.99  within1: +0.045 [+0.010,+0.083] P=0.99
+E1 vs E0 [TEST-100]  acc: +0.060 [-0.020,+0.140] P=0.92  qwk: +0.134 [+0.036,+0.258] P=1.00  within1: +0.041 [+0.000,+0.090] P=0.95
+E2 vs E0 [CV-400]  acc: +0.008 [-0.047,+0.065] P=0.59  qwk: +0.098 [+0.012,+0.186] P=0.99  within1: +0.045 [+0.008,+0.083] P=0.99
+E2 vs E0 [TEST-100]  acc: +0.138 [+0.040,+0.230] P=1.00  qwk: +0.162 [+0.020,+0.320] P=0.99  within1: +0.011 [-0.050,+0.080] P=0.56
+E3 vs E2 [CV-400]  acc: +0.044 [-0.012,+0.100] P=0.94  qwk: +0.051 [-0.013,+0.112] P=0.94  within1: +0.007 [-0.025,+0.037] P=0.64
+E3 vs E2 [TEST-100]  acc: +0.021 [-0.080,+0.120] P=0.64  qwk: +0.055 [-0.039,+0.149] P=0.87  within1: +0.009 [-0.030,+0.060] P=0.57
+E4 vs E3 [CV-400]  acc: +0.015 [-0.038,+0.068] P=0.68  qwk: +0.013 [-0.040,+0.065] P=0.69  within1: -0.013 [-0.040,+0.015] P=0.17
+E4 vs E3 [TEST-100]  acc: +0.001 [-0.080,+0.080] P=0.47  qwk: +0.029 [-0.025,+0.089] P=0.84  within1: +0.010 [-0.020,+0.050] P=0.61
+E5 vs E3 [CV-400]  acc: +0.065 [+0.015,+0.115] P=0.99  qwk: +0.047 [-0.005,+0.096] P=0.96  within1: +0.000 [-0.025,+0.025] P=0.46
+E5 vs E3 [TEST-100]  acc: +0.061 [-0.020,+0.140] P=0.91  qwk: +0.010 [-0.065,+0.085] P=0.61  within1: -0.000 [-0.040,+0.040] P=0.39
+E6 vs E4 [CV-400]  acc: +0.015 [-0.037,+0.065] P=0.69  qwk: +0.050 [-0.001,+0.101] P=0.97  within1: +0.033 [+0.005,+0.062] P=0.99
+E6 vs E4 [TEST-100]  acc: +0.099 [+0.040,+0.160] P=1.00  qwk: +0.026 [-0.022,+0.073] P=0.86  within1: -0.010 [-0.040,+0.020] P=0.18
+E6 vs E7 [CV-400]  acc: +0.009 [-0.043,+0.060] P=0.63  qwk: +0.082 [+0.024,+0.141] P=1.00  within1: +0.028 [+0.000,+0.055] P=0.96
+E6 vs E7 [TEST-100]  acc: +0.130 [+0.050,+0.210] P=1.00  qwk: +0.075 [+0.012,+0.148] P=0.99  within1: -0.010 [-0.040,+0.020] P=0.18
+E6 vs E0 [CV-400]  acc: +0.081 [+0.022,+0.143] P=1.00  qwk: +0.212 [+0.132,+0.291] P=1.00  within1: +0.072 [+0.035,+0.112] P=1.00
+E6 vs E0 [TEST-100]  acc: +0.259 [+0.160,+0.360] P=1.00  qwk: +0.272 [+0.152,+0.427] P=1.00  within1: +0.020 [-0.040,+0.090] P=0.68
+
+95% BOOTSTRAP CONFIDENCE INTERVALS
+E0 [CV-400] acc 0.432 [0.385,0.482]  qwk 0.453 [0.371,0.523]  within1 0.858 [0.825,0.890]  auc_macro 0.648 [0.609,0.688]  auc_abn 0.706 [0.639,0.768]  auc_mod 0.722 [0.670,0.772]
+E0 [TEST-100] acc 0.360 [0.270,0.460]  qwk 0.431 [0.265,0.562]  within1 0.890 [0.820,0.950]  auc_macro 0.674 [0.598,0.746]  auc_abn 0.730 [0.610,0.841]  auc_mod 0.754 [0.648,0.850]
+E6 [CV-400] acc 0.515 [0.465,0.562]  qwk 0.665 [0.607,0.719]  within1 0.930 [0.905,0.955]  auc_macro 0.757 [0.725,0.788]  auc_abn 0.830 [0.786,0.873]  auc_mod 0.830 [0.788,0.870]
+E6 [TEST-100] acc 0.620 [0.520,0.720]  qwk 0.703 [0.582,0.806]  within1 0.910 [0.850,0.960]  auc_macro 0.788 [0.731,0.844]  auc_abn 0.882 [0.804,0.943]  auc_mod 0.851 [0.765,0.924]
+
+TEST-TIME AUGMENTATION (E6, 3 small rotations averaged; 559s)
+without TTA: acc 0.620 macro_f1 0.624 qwk 0.703 within1 0.910 auc_macro 0.788 auc_abn 0.882
+with TTA   : acc 0.630 macro_f1 0.638 qwk 0.716 within1 0.920 auc_macro 0.784 auc_abn 0.875
+
+METRICS vs THE 0.80 GOAL - proposed model E6 (final = 5-model ensemble + TTA on test)
+    metric  proposed_CV  proposed_TEST  age_sex_only_CV  always_majority_CV  above_0_80_both  beats_trivial_by_0_05
+       acc        0.515          0.630            0.490               0.312            False                  False
+  macro_f1        0.527          0.638            0.497               0.119            False                  False
+       qwk        0.665          0.716            0.635               0.000            False                  False
+   within1        0.930          0.920            0.938               0.840             True                  False
+ auc_macro        0.757          0.784            0.766               0.495            False                  False
+   auc_abn        0.830          0.875            0.855               0.494             True                  False
+   auc_mod        0.830          0.849            0.834               0.496             True                  False
+   auc_sev        0.851          0.885            0.850               0.493             True                  False
+balacc_abn        0.737          0.832            0.733               0.500            False                  False
+balacc_mod        0.776          0.809            0.756               0.500            False                  False
+balacc_sev        0.757          0.814            0.686               0.500            False                   True
+Metrics >= 0.80 on BOTH CV and test AND clearly better than the trivial references: []
+Metrics >= 0.80 on both but NOT clearly above what a trivial rule scores (do not headline these): ['within1', 'auc_abn', 'auc_mod', 'auc_sev']
+Exact 4-class accuracy and macro-F1 are reported honestly even if below 0.80; do not hide them in the paper.
+Grad-CAM++ figure saved (final/gradcam_pp.png). Check by eye whether the hot areas sit on the vertebrae / disc spaces, not on the skull or shoulders.
+
+================ FINAL REPORT (Notebook 3) ================
+Baseline (base-paper replication): E0 = BASE-PAPER REPLICATION (ResNetV2 arm)
+Proposed model: E6 = FULL MODEL AT HIGHER RESOLUTION (320 px)
+The proposed model was chosen with cross-validation only. The 100 test images were opened once, here.
+
+================ WHAT IS THE BASE PAPER AND WHAT IS NEW ================
+Base paper : Loh et al. 2026, J Imaging Inform Med - ResNet152V2 vs ConvNeXt-Tiny, ImageNet transfer learning, stratified 5-fold CV, plain classification (E0, E1).
+Our additions (each isolated by one row of the ladder): CLAHE enhancement + stored augmentation (all models), ordinal CORAL head (E2),
+age/sex fusion (E3), findings-guided auxiliary heads trained with expert annotations but dropped at inference (E4-E6), image-only check (E7).
+Other design sources: Fraiwan 2022 (transfer learning, macro-F1 for imbalance), Ahmad 2026 (fine-tuning + Grad-CAM verification),
+Wang 2025 (structured imaging findings relate to symptom severity). CORAL: Cao et al. 2020 (check the citation before submission).
+Honest comparison rule: Loh's 86.0% is accuracy on a different 3-class alignment task. We compare against our OWN re-implementation (E0) on the SAME data.
+
+================ METRIC GLOSSARY ================
+Accuracy : share of images whose predicted CDI equals the true CDI (exact hit). Strict for a 4-grade scale.
+Macro-F1 : F1 per class averaged with equal weight; punishes ignoring rare classes.
+QWK (quadratic weighted kappa) : agreement beyond chance where an error of 2 grades costs 4x an error of 1 grade. 0 = chance, 1 = perfect. The standard metric for ordinal grading.
+Within-1 : share of images predicted within one grade of the truth. NOTE: always predicting CDI 1 already scores 0.84 here, so only values clearly above that mean something.
+AUC macro : how well predicted probabilities rank cases, averaged over the 4 grades (0.5 = coin flip, 1 = perfect).
+auc_abn / auc_mod / auc_sev : AUC for the yes/no questions 'CDI>=1?', 'CDI>=2?', 'CDI=3?'. balacc_* : balanced accuracy of the same questions (average of sensitivity and specificity; fair even when classes are unequal).
+Why not plain accuracy for 'normal vs abnormal': 78% of images are abnormal, so always answering 'abnormal' already gets 78%.
+Bootstrap 95% interval : the metric recomputed on 1000 random re-draws of the images; the true value probably lies inside. 100 test images give wide intervals (about +-0.09 for accuracy).
+Paired bootstrap : both models are scored on the same re-drawn images; if the interval of (B minus A) excludes 0, B really is better.
+Ensemble : the 5 fold-models are averaged. TTA : each test image is also shown rotated by +-3 degrees and the answers are averaged.
+
+================ RESULTS ================
+A) Cross-validation, 400 dev images
+exp   acc  macro_f1   qwk  within1  auc_macro  auc_abn  auc_mod  auc_sev  balacc_abn  balacc_mod  balacc_sev
+ E0 0.432     0.426 0.453    0.858      0.648    0.706    0.722    0.651       0.652       0.696       0.622
+ E1 0.458     0.460 0.555    0.902      0.674    0.760    0.750    0.723       0.695       0.735       0.663
+ E2 0.440     0.447 0.551    0.902      0.694    0.776    0.773    0.779       0.674       0.729       0.690
+ E3 0.485     0.488 0.603    0.910      0.732    0.824    0.815    0.801       0.735       0.761       0.680
+ E4 0.500     0.506 0.616    0.897      0.737    0.828    0.799    0.813       0.739       0.763       0.734
+ E5 0.550     0.557 0.650    0.910      0.767    0.825    0.829    0.857       0.758       0.784       0.765
+ E6 0.515     0.527 0.665    0.930      0.757    0.830    0.830    0.851       0.737       0.776       0.757
+ E7 0.505     0.511 0.584    0.902      0.725    0.791    0.786    0.794       0.730       0.739       0.710
+
+B) Locked test, 100 images
+exp  acc  macro_f1   qwk  within1  auc_macro  auc_abn  auc_mod  auc_sev  balacc_abn  balacc_mod  balacc_sev
+ E0 0.36     0.343 0.431     0.89      0.674    0.730    0.754    0.786       0.598       0.680       0.570
+ E1 0.42     0.420 0.566     0.93      0.692    0.774    0.768    0.802       0.670       0.720       0.626
+ E2 0.50     0.506 0.594     0.90      0.737    0.830    0.790    0.851       0.721       0.740       0.702
+ E3 0.52     0.531 0.649     0.91      0.756    0.851    0.835    0.859       0.764       0.759       0.765
+ E4 0.52     0.521 0.677     0.92      0.764    0.868    0.841    0.868       0.813       0.780       0.734
+ E5 0.58     0.580 0.659     0.91      0.779    0.904    0.837    0.836       0.826       0.790       0.740
+ E6 0.62     0.624 0.703     0.91      0.788    0.882    0.851    0.882       0.832       0.809       0.802
+ E7 0.49     0.515 0.629     0.92      0.731    0.812    0.810    0.898       0.758       0.708       0.763
+
+C) Proposed model vs the 0.80 goal
+    metric  proposed_CV  proposed_TEST  age_sex_only_CV  always_majority_CV  above_0_80_both  beats_trivial_by_0_05
+       acc        0.515          0.630            0.490               0.312            False                  False
+  macro_f1        0.527          0.638            0.497               0.119            False                  False
+       qwk        0.665          0.716            0.635               0.000            False                  False
+   within1        0.930          0.920            0.938               0.840             True                  False
+ auc_macro        0.757          0.784            0.766               0.495            False                  False
+   auc_abn        0.830          0.875            0.855               0.494             True                  False
+   auc_mod        0.830          0.849            0.834               0.496             True                  False
+   auc_sev        0.851          0.885            0.850               0.493             True                  False
+balacc_abn        0.737          0.832            0.733               0.500            False                  False
+balacc_mod        0.776          0.809            0.756               0.500            False                  False
+balacc_sev        0.757          0.814            0.686               0.500            False                   True
+
+Clearly above 0.80 and above trivial references: []
+Above 0.80 but trivial-level: ['within1', 'auc_abn', 'auc_mod', 'auc_sev']
+
+================ SIGNIFICANCE (paired bootstrap, B minus A) ================
+E1 vs E0 [CV-400]  acc: +0.025 [-0.030,+0.080] P=0.80  qwk: +0.103 [+0.012,+0.191] P=0.99  within1: +0.045 [+0.010,+0.083] P=0.99
+E1 vs E0 [TEST-100]  acc: +0.060 [-0.020,+0.140] P=0.92  qwk: +0.134 [+0.036,+0.258] P=1.00  within1: +0.041 [+0.000,+0.090] P=0.95
+E2 vs E0 [CV-400]  acc: +0.008 [-0.047,+0.065] P=0.59  qwk: +0.098 [+0.012,+0.186] P=0.99  within1: +0.045 [+0.008,+0.083] P=0.99
+E2 vs E0 [TEST-100]  acc: +0.138 [+0.040,+0.230] P=1.00  qwk: +0.162 [+0.020,+0.320] P=0.99  within1: +0.011 [-0.050,+0.080] P=0.56
+E3 vs E2 [CV-400]  acc: +0.044 [-0.012,+0.100] P=0.94  qwk: +0.051 [-0.013,+0.112] P=0.94  within1: +0.007 [-0.025,+0.037] P=0.64
+E3 vs E2 [TEST-100]  acc: +0.021 [-0.080,+0.120] P=0.64  qwk: +0.055 [-0.039,+0.149] P=0.87  within1: +0.009 [-0.030,+0.060] P=0.57
+E4 vs E3 [CV-400]  acc: +0.015 [-0.038,+0.068] P=0.68  qwk: +0.013 [-0.040,+0.065] P=0.69  within1: -0.013 [-0.040,+0.015] P=0.17
+E4 vs E3 [TEST-100]  acc: +0.001 [-0.080,+0.080] P=0.47  qwk: +0.029 [-0.025,+0.089] P=0.84  within1: +0.010 [-0.020,+0.050] P=0.61
+E5 vs E3 [CV-400]  acc: +0.065 [+0.015,+0.115] P=0.99  qwk: +0.047 [-0.005,+0.096] P=0.96  within1: +0.000 [-0.025,+0.025] P=0.46
+E5 vs E3 [TEST-100]  acc: +0.061 [-0.020,+0.140] P=0.91  qwk: +0.010 [-0.065,+0.085] P=0.61  within1: -0.000 [-0.040,+0.040] P=0.39
+E6 vs E4 [CV-400]  acc: +0.015 [-0.037,+0.065] P=0.69  qwk: +0.050 [-0.001,+0.101] P=0.97  within1: +0.033 [+0.005,+0.062] P=0.99
+E6 vs E4 [TEST-100]  acc: +0.099 [+0.040,+0.160] P=1.00  qwk: +0.026 [-0.022,+0.073] P=0.86  within1: -0.010 [-0.040,+0.020] P=0.18
+E6 vs E7 [CV-400]  acc: +0.009 [-0.043,+0.060] P=0.63  qwk: +0.082 [+0.024,+0.141] P=1.00  within1: +0.028 [+0.000,+0.055] P=0.96
+E6 vs E7 [TEST-100]  acc: +0.130 [+0.050,+0.210] P=1.00  qwk: +0.075 [+0.012,+0.148] P=0.99  within1: -0.010 [-0.040,+0.020] P=0.18
+E6 vs E0 [CV-400]  acc: +0.081 [+0.022,+0.143] P=1.00  qwk: +0.212 [+0.132,+0.291] P=1.00  within1: +0.072 [+0.035,+0.112] P=1.00
+E6 vs E0 [TEST-100]  acc: +0.259 [+0.160,+0.360] P=1.00  qwk: +0.272 [+0.152,+0.427] P=1.00  within1: +0.020 [-0.040,+0.090] P=0.68
+
+================ HOW TO READ THIS HONESTLY ================
+1. A ladder step counts as a contribution only if its paired-bootstrap interval excludes 0 on cross-validation (400 images). The 100-image test set is a confirmation, not the proof.
+2. If the auxiliary-heads steps (E3 -> E4/E5/E6) are NOT significant, say so. The paper then claims the ordinal + clinical-fusion model and reports the auxiliary heads as a tested idea with no significant gain.
+3. Exact 4-class accuracy near 0.5-0.6 is expected: expert findings alone only reach about 0.66 (random forest check), so the grade itself is partly subjective.
+4. Report age+sex-only (R0) next to every image model. The image model must beat it for the claim 'the image adds information'.
+5. Limitations to state: single centre, 500 images, no external validation, retrospective data, no patient IDs (we checked near-duplicates only), ROI boxes unusable, one annotator pool.

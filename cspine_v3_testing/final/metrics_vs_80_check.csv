@@ -1,0 +1,12 @@
+metric,proposed_CV,proposed_TEST,age_sex_only_CV,always_majority_CV,above_0_80_both,beats_trivial_by_0_05
+acc,0.515,0.63,0.49,0.312,False,False
+macro_f1,0.527,0.638,0.497,0.119,False,False
+qwk,0.665,0.716,0.635,0.0,False,False
+within1,0.93,0.92,0.938,0.84,True,False
+auc_macro,0.757,0.784,0.766,0.495,False,False
+auc_abn,0.83,0.875,0.855,0.494,True,False
+auc_mod,0.83,0.849,0.834,0.496,True,False
+auc_sev,0.851,0.885,0.85,0.493,True,False
+balacc_abn,0.737,0.832,0.733,0.5,False,False
+balacc_mod,0.776,0.809,0.756,0.5,False,False
+balacc_sev,0.757,0.814,0.686,0.5,False,True
