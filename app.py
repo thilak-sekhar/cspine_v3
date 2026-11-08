@@ -1,13 +1,6 @@
 import html
-import streamlit as st
 import re
-LEGEND = {"G": "Directly supported by the APTA Neck Pain CPG (Blanpied 2017)",
-          "R": "Named trial, systematic review or clinical prediction study",
-          "T": "Standard textbook teaching (Maitland, Kisner & Colby, Kendall, etc.)",
-          "C": "Clinical reasoning or consensus; needs expert-panel validation",
-          "S": "System, safety or data-quality rule"}
-def meaning(lvl):
-    return "; ".join(f"{k}: {LEGEND[k]}" for k in re.findall(r"\b[GRTCS]\b", lvl))
+import streamlit as st
 
 st.set_page_config(page_title="Cervical Spondylosis Decision Support", page_icon="🩺", layout="wide")
 
@@ -27,8 +20,8 @@ st.markdown("""
 .kv small{display:block;color:#5d6b7c}.kv b{font-size:15px}
 .bd{display:inline-block;font-size:11px;font-weight:600;padding:0 6px;border-radius:8px;background:#eaf4f8;border:1px solid #b9d3df;color:#0b6e99}
 .bd.cs{background:#fff3c4;border-color:#e6cf70;color:#6b5600}
-.ok{background:#e6f6ee;border:1px solid #9fd8b8;color:#14663a;padding:10px 14px;border-radius:8px;font-weight:600}
-.er{background:#fdecea;border:1px solid #f0aaa4;color:#9b1c14;padding:10px 14px;border-radius:8px;font-weight:600}
+.ok{background:#e6f6ee;border:1px solid #9fd8b8;color:#14663a;padding:10px 14px;border-radius:8px;font-weight:600;margin-bottom:8px}
+.er{background:#fdecea;border:1px solid #f0aaa4;color:#9b1c14;padding:10px 14px;border-radius:8px;font-weight:600;margin-bottom:8px}
 .wn{color:#8a5200}.mu{color:#5d6b7c;font-size:12px}
 </style>
 <div class="hdr"><h1>🩺 Cervical Spondylosis: Clinical Decision Support</h1>
@@ -37,7 +30,7 @@ st.markdown("""
 
 # ------------------------------------------------------------------ KNOWLEDGE BASE
 # Evidence level of every rule: G APTA CPG, R trial/review, T textbook, C consensus, S system/safety
-LV = {**{f"V{i}": "S" for i in range(1, 10)},
+LV = {**{f"V{i}": "S" for i in range(1, 11)},
       "D1": "S", "D2": "S", "D3": "S", "D4a": "G", "D4b": "G", "D5": "R", "D6": "R", "D7": "R",
       "D8": "C", "D9": "T", "D10": "C", "D11": "T",
       "R1": "G", "R2": "S", "R3": "R", "R4": "C", "R5": "C", "R6": "C", "R7": "C",
@@ -47,6 +40,15 @@ LV = {**{f"V{i}": "S" for i in range(1, 10)},
       "T7": "T/G", "T8": "T/G", "T9": "T", "T10a": "R/T", "T10b": "C", "T11": "T", "T12": "T",
       "T13": "C", "T14a": "R", "T14b": "R", "Q1": "G/R/T", "Q2": "C", "Q3": "S",
       "RV1": "S", "RV2": "R", "RV3": "C", "RV4": "C", "RV5": "S", "RV6": "C", "RV7": "S"}
+
+LEGEND = {"G": "Directly supported by the APTA Neck Pain CPG (Blanpied 2017)",
+          "R": "Named trial, systematic review or clinical prediction study",
+          "T": "Standard textbook teaching (Maitland, Kisner & Colby, Kendall, etc.)",
+          "C": "Clinical reasoning or consensus; needs expert-panel validation",
+          "S": "System, safety or data-quality rule"}
+
+def meaning(lvl):
+    return "; ".join(f"{k}: {LEGEND[k]}" for k in re.findall(r"\b[GRTCS]\b", lvl))
 
 # key: (technique, dose, duration/frequency, level and source)   † = needs validation
 DOSE = {
@@ -68,9 +70,13 @@ DOSE = {
 }
 LOWEND = {"AROM", "ISO", "STR", "DNF", "STG"}   # Q2: high irritability -> lower end, once daily
 
+WAINNER_ITEMS = ["ULTT-A", "Spurling-A", "Distraction", "Ipsilateral rotation <60°"]
+COOK_ITEMS = ["Gait deviation", "+Hoffmann", "Inverted supinator", "+Babinski"]
+
 # ------------------------------------------------------------------ RULE ENGINE
 def run(v):
-    o = {"err": [], "warn": [], "audit": [], "stop": False, "d": [], "ref": [], "res": [], "T": [], "rv": []}
+    o = {"err": [], "warn": [], "audit": [], "stop": False, "d": [], "ref": [], "res": [], "T": [], "rv": [],
+         "decision": ""}
     log = lambda r, t: o["audit"].append((r, t))
 
     if v["age"] < 18: o["err"].append(("V1", "Age must be a number of 18 or more."))
@@ -79,8 +85,13 @@ def run(v):
     pc = sum([v["pN"], v["pF"], v["pR"], v["pK"]])
     if pc == 0: o["err"].append(("V5", "Tick at least one posture option."))
     elif v["pN"] and pc > 1: o["err"].append(("V6", "Normal cannot be combined with another posture."))
+    # V10 (new system rule): several tension tests may be positive, but Negative cannot be combined with a positive one
+    if "Negative" in v["ultt"] and len(v["ultt"]) > 1:
+        o["err"].append(("V10", "Upper-limb tension test: Negative cannot be combined with a positive test."))
     if v["nprs"] == 0 and v["ndi"] >= 25: o["warn"].append(("V7", "Severe disability with no pain; check the data entry."))
     if v["dist"] == "Radiating" and v["rad"] <= 1: o["warn"].append(("V8", "Radiating pain with an unlikely Wainner cluster; recheck the tests."))
+    if "Not Identified" in v["root"] and len(v["root"]) > 1:
+        o["warn"].append(("V10", "Root level: 'Not Identified' selected together with specific roots; check the entry."))
     if o["err"]:
         for r, t in o["err"]: log(r, "REJECT: " + t)
         log("V9", "Run ended at layer 0.")
@@ -88,6 +99,7 @@ def run(v):
 
     # ---- Layer 1: derived values
     age, nprs, ndi, bmi, rad, myel = v["age"], v["nprs"], v["ndi"], v["bmi"], v["rad"], v["myel"]
+    ultt_pos = [x for x in v["ultt"] if x != "Negative"]
     ap = v["ap"] == "Yes"
     d = {}
     d["Age band"] = ("18-35" if age <= 35 else "36-50" if age <= 50 else "51-65" if age <= 65 else "66+", "D1")
@@ -97,8 +109,10 @@ def run(v):
     elif ap: bc = "Normal" if bmi < 23 else "Overweight" if bmi < 25 else "Obese"
     else: bc = "Normal" if bmi < 25 else "Overweight" if bmi < 30 else "Obese"
     d["BMI category"] = (bc, "D4b" if ap else "D4a")
+    d["Wainner positives"] = (f"{rad}/4: " + (", ".join(v["wainner"]) or "none"), "D5")
     d["Radiculopathy (Wainner)"] = (["Unlikely", "Unlikely", "Indeterminate", "Likely", "Highly likely"][rad], "D5")
     mt = myel + (1 if age > 45 else 0)
+    d["Cook items positive"] = (", ".join(v["cook"] + (["Age > 45"] if age > 45 else [])) or "none", "D6")
     d["Cook total (0-5)"] = (str(mt), "D6")
     d["Myelopathy category"] = ("Unlikely" if mt == 0 else "Indeterminate" if mt <= 2 else "Likely", "D7")
     ra = v["romAll"]
@@ -184,7 +198,7 @@ def run(v):
     t("STG", "T8", t8, "Chronic, not high irritability, not severe NPRS")
     t("END", "T8", t8, "Chronic, not high irritability, not severe NPRS")
     t("THO", "T9", v["pK"] or v["pF"] or not acute, "Kyphosis, forward-head or non-acute")
-    t("NEU", "T10a", v["ultt"] != "Negative" or rad >= 2, "ULTT positive or Wainner 2+")
+    t("NEU", "T10a", bool(ultt_pos) or rad >= 2, "Any ULTT positive or Wainner 2+")
     t("BAL", "T11", age >= 66, "Age 66+")
     t("AER", "T12", bc in ("Overweight", "Obese"), "BMI overweight or obese")
     t("ERG", "T13", erg or not v["pN"], "Ergonomic exposure or abnormal posture")
@@ -200,7 +214,9 @@ def run(v):
             if x["k"] == "MOB":
                 dose = f"Grades {grade}" + ("; avoid end-range in provoking directions" if fo or v["prov"] == "Lateral Flexion" else "")
             if x["k"] == "STR" and uc: dose += "; target: suboccipital, pectorals, upper trapezius, levator"
-            if x["k"] == "NEU": dose += "; tensioners may be added once sliders are tolerated" if (v["irr"] == "Low" and nprs <= 3) else "; sliders only"
+            if x["k"] == "NEU":
+                dose += "; tensioners may be added once sliders are tolerated" if (v["irr"] == "Low" and nprs <= 3) else "; sliders only"
+                if ultt_pos: dose += f" (positive test: {', '.join(ultt_pos)})"
             if high and x["k"] in LOWEND:
                 dose += " [High irritability: use lower end of the range - Q2]"
                 freq = "Once a day (Q2, high irritability). Reference: " + freq
@@ -246,6 +262,7 @@ v["occ"] = sb.selectbox("Occupation", ["Sedentary", "Manual", "Mixed", "Other"])
 v["sit"] = sb.selectbox("Sitting / screen time", ["<4 h", "4-8 h", ">8 h"], index=2)
 v["neckflex"] = sb.selectbox("Sustained neck-flexed work", ["Absent", "Present"], index=1)
 v["comorb"] = sb.selectbox("Comorbidity", ["None", "Osteoporosis", "Anticoagulant", "Inflammatory Arthropathy", "Other"])
+
 sb.subheader("Symptoms")
 v["dur"] = sb.selectbox("Symptom duration", ["Acute", "Subacute", "Chronic"], index=1)
 v["nprs"] = sb.number_input("NPRS, 24 h average (0-10)", 0.0, 10.0, 5.0, 0.5)
@@ -254,13 +271,23 @@ v["dist"] = sb.selectbox("Pain distribution", ["Axial", "Referred", "Radiating"]
 v["ndi"] = sb.number_input("NDI (0-50)", 0, 50, 20)
 v["head"] = sb.selectbox("Cervicogenic headache", ["Absent", "Present"], index=1)
 v["psy"] = sb.selectbox("Psychosocial risk", ["Low", "Moderate", "High"], index=1)
+
 sb.subheader("Neurological")
-v["rad"] = sb.selectbox("Wainner positives (0-4)", [0, 1, 2, 3, 4], index=3)
+sb.markdown("**Wainner cluster: tick each positive test**")
+v["wainner"] = [n for n, d0 in zip(WAINNER_ITEMS, [True, True, True, False]) if sb.checkbox(n, d0, key="w_" + n)]
+v["rad"] = len(v["wainner"])
+sb.caption(f"Wainner positives: {v['rad']} of 4")
 v["neuro"] = sb.selectbox("Neurological deficit", ["None", "Sensory", "Motor", "Reflex", "Progressive"], index=1)
-v["root"] = sb.selectbox("Root level", ["Not Identified", "C5", "C6", "C7", "C8"], index=2)
-v["ultt"] = sb.selectbox("Upper-limb tension test", ["Negative", "Median", "Radial", "Ulnar"], index=1)
-v["myel"] = sb.selectbox("Myelopathy clinical signs (0-4)", [0, 1, 2, 3, 4])
+v["root"] = sb.multiselect("Root level (select one or more)", ["C5", "C6", "C7", "C8", "Not Identified"], default=["C6"]) or ["Not Identified"]
+v["ultt"] = sb.multiselect("Upper-limb tension test (select one or more)", ["Negative", "Median", "Radial", "Ulnar"], default=["Median"]) or ["Negative"]
+sb.markdown("**Myelopathy screen (Cook cluster): tick each positive clinical sign**")
+v["cook"] = [n for n in COOK_ITEMS if sb.checkbox(n, False, key="c_" + n)]
+v["myel"] = len(v["cook"])
+age_item = v["age"] > 45
+sb.caption(f"Age > 45: {'Yes (+1, added automatically)' if age_item else 'No'}. "
+           f"Cook total: {v['myel'] + (1 if age_item else 0)} of 5")
 v["red"] = sb.selectbox("Red flags / CAD screen", ["Absent", "Present"])
+
 sb.subheader("Movement")
 rom = ["Normal", "Painful", "Restricted", "Painful-Restricted"]
 v["romF"] = sb.selectbox("ROM flexion", rom, index=1)
@@ -271,6 +298,7 @@ v["romAll"] = sb.number_input("Overall ROM (% of age-adjusted normal)", 0, 150, 
 v["prov"] = sb.selectbox("Pain-provoking direction", ["None", "Flexion", "Extension", "Lateral Flexion", "Rotation"], index=2)
 v["dnf"] = sb.selectbox("Deep neck flexor performance", ["Adequate", "Impaired"], index=1)
 v["cdi"] = sb.selectbox("CDI (0-3)", [0, 1, 2, 3], index=2)
+
 sb.subheader("Posture (Normal cannot combine)")
 v["pN"] = sb.checkbox("Normal posture", False)
 v["pF"] = sb.checkbox("Forward-head posture", True)
@@ -299,7 +327,6 @@ e = html.escape
 o = run(v)
 
 # ------------------------------------------------------------------ DASHBOARD
-# 1. Validation and result
 valid = not o["err"]
 ran = valid and not o["stop"]
 if not valid:
@@ -313,7 +340,9 @@ for r, t in o["warn"]: st.warning(f"{r} WARN: {t}")
 
 if valid:
     kv = "".join(f'<div class="kv"><small>{e(k)}</small><b>{e(a)}</b>{bd(r)}</div>' for k, a, r in o["d"])
-    card("", "Derived values (Layer 1)", kv)
+    summary = (f'<div class="mu">Root level(s): {e(", ".join(v["root"]))} (recorded; no rule uses it). '
+               f'Upper-limb tension test: {e(", ".join(v["ultt"]))}.</div>')
+    card("", "Derived values (Layer 1)", kv + summary)
 
 def notrun():
     if not valid: return '<div class="mu">Not generated: fix the Layer 0 input errors first.</div>'
